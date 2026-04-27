@@ -1,6 +1,9 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import CloseIcon from "@mui/icons-material/Close";
 import { FormField } from "@/components/forms";
 import { Button, ConfirmationModal, DataTable, Input, PageHeader, Select, StatusAlert } from "@/components/ui";
 import { useAuth } from "@/hooks";
@@ -60,6 +63,8 @@ export default function ModuloAnimaisPage() {
   const [feedbackSuccess, setFeedbackSuccess] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [animalToDelete, setAnimalToDelete] = useState<Animal | null>(null);
+  const [animalDetails, setAnimalDetails] = useState<Animal | null>(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createForm, setCreateForm] = useState<AnimalFormState>(initialForm);
@@ -72,6 +77,14 @@ export default function ModuloAnimaisPage() {
   const [editErrors, setEditErrors] = useState<AnimalFormErrors>({});
   const [savingEdit, setSavingEdit] = useState(false);
   const [removingImageId, setRemovingImageId] = useState<string | null>(null);
+
+  const detailImageUrls = useMemo(() => {
+    if (!animalDetails) return [];
+
+    return (animalDetails.identificacao?.imagens ?? [])
+      .map((imagem) => resolveApiAssetUrl(imagem.imagemUrl))
+      .filter((url): url is string => Boolean(url));
+  }, [animalDetails]);
 
   const loadData = useCallback(async () => {
     setLoadingList(true);
@@ -253,6 +266,30 @@ export default function ModuloAnimaisPage() {
     setAnimalToDelete(animal);
   }
 
+  function openAnimalDetailsModal(animal: Animal) {
+    setAnimalDetails(animal);
+    setCarouselIndex(0);
+  }
+
+  function closeAnimalDetailsModal() {
+    setAnimalDetails(null);
+    setCarouselIndex(0);
+  }
+
+  function goToPreviousImage() {
+    setCarouselIndex((current) => {
+      if (detailImageUrls.length === 0) return 0;
+      return (current - 1 + detailImageUrls.length) % detailImageUrls.length;
+    });
+  }
+
+  function goToNextImage() {
+    setCarouselIndex((current) => {
+      if (detailImageUrls.length === 0) return 0;
+      return (current + 1) % detailImageUrls.length;
+    });
+  }
+
   async function confirmDelete() {
     if (!animalToDelete) return;
 
@@ -335,7 +372,11 @@ export default function ModuloAnimaisPage() {
               if (!url) return "-";
 
               return (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => openAnimalDetailsModal(animal)}
+                  className="flex items-center gap-2 rounded-lg px-1 py-1 text-left transition-colors hover:bg-brand-50/40"
+                >
                   <img
                     src={url}
                     alt={`Identificacao de ${animal.nome}`}
@@ -348,11 +389,22 @@ export default function ModuloAnimaisPage() {
                     loading="lazy"
                   />
                   <span>{total} img.</span>
-                </div>
+                </button>
               );
             }
           },
-          { header: "Nome", render: (animal) => animal.nome },
+          {
+            header: "Nome",
+            render: (animal) => (
+              <button
+                type="button"
+                onClick={() => openAnimalDetailsModal(animal)}
+                className="text-left font-semibold text-brand-800 underline decoration-brand-300 underline-offset-4"
+              >
+                {animal.nome}
+              </button>
+            )
+          },
           { header: "Especie", render: (animal) => animal.especie },
           { header: "Raca", render: (animal) => animal.raca },
           { header: "Proprietario", render: (animal) => animal.proprietario?.nome ?? "-" },
@@ -385,6 +437,133 @@ export default function ModuloAnimaisPage() {
             : [])
         ]}
       />
+
+      {animalDetails ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 overflow-y-auto">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Detalhes do animal ${animalDetails.nome}`}
+            className="w-full max-w-4xl rounded-2xl border border-[var(--border)] bg-white p-5 shadow-card max-h-[92vh] overflow-y-auto"
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="font-[var(--font-heading)] text-xl font-semibold text-brand-900">
+                  {animalDetails.nome}
+                </h2>
+                <p className="text-sm text-[var(--muted)]">
+                  Codigo: {animalDetails.identificacao?.codigo ?? animalDetails.codigoIdentificacao ?? "-"}
+                </p>
+              </div>
+              <Button type="button" variant="ghost" onClick={closeAnimalDetailsModal}>
+                <CloseIcon fontSize="small" />
+                Fechar
+              </Button>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <div className="space-y-3">
+                {detailImageUrls.length > 0 ? (
+                  <>
+                    <div className="overflow-hidden rounded-xl border border-[var(--border)]">
+                      <img
+                        src={detailImageUrls[carouselIndex]}
+                        alt={`Imagem ${carouselIndex + 1} de ${animalDetails.nome}`}
+                        style={{
+                          width: "100%",
+                          height: "320px",
+                          objectFit: "cover",
+                          display: "block"
+                        }}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2">
+                      <Button type="button" variant="secondary" onClick={goToPreviousImage}>
+                        <ChevronLeftIcon fontSize="small" />
+                        Anterior
+                      </Button>
+                      <span className="text-sm text-[var(--muted)]">
+                        {carouselIndex + 1} de {detailImageUrls.length}
+                      </span>
+                      <Button type="button" variant="secondary" onClick={goToNextImage}>
+                        Proxima
+                        <ChevronRightIcon fontSize="small" />
+                      </Button>
+                    </div>
+
+                    {detailImageUrls.length > 1 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {detailImageUrls.map((url, index) => (
+                          <button
+                            key={url}
+                            type="button"
+                            onClick={() => setCarouselIndex(index)}
+                            style={{
+                              border: index === carouselIndex ? "2px solid #3f6b48" : "1px solid #d5e1d8",
+                              borderRadius: "8px",
+                              padding: 0,
+                              overflow: "hidden",
+                              cursor: "pointer"
+                            }}
+                          >
+                            <img
+                              src={url}
+                              alt={`Miniatura ${index + 1}`}
+                              style={{
+                                width: "68px",
+                                height: "68px",
+                                objectFit: "cover",
+                                display: "block"
+                              }}
+                              loading="lazy"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <div className="rounded-xl border border-[var(--border)] bg-brand-50 p-4 text-sm text-[var(--muted)]">
+                    Este animal ainda nao possui imagens de identificacao.
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div className="rounded-xl border border-[var(--border)] bg-white p-4">
+                  <p className="text-xs uppercase tracking-wide text-[var(--muted)]">Especie</p>
+                  <p className="text-base font-semibold text-brand-900">{animalDetails.especie || "-"}</p>
+                </div>
+                <div className="rounded-xl border border-[var(--border)] bg-white p-4">
+                  <p className="text-xs uppercase tracking-wide text-[var(--muted)]">Raca</p>
+                  <p className="text-base font-semibold text-brand-900">{animalDetails.raca || "-"}</p>
+                </div>
+                <div className="rounded-xl border border-[var(--border)] bg-white p-4">
+                  <p className="text-xs uppercase tracking-wide text-[var(--muted)]">Porte e sexo</p>
+                  <p className="text-base font-semibold text-brand-900">
+                    {animalDetails.porte || "-"} | {animalDetails.sexo || "-"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-[var(--border)] bg-white p-4">
+                  <p className="text-xs uppercase tracking-wide text-[var(--muted)]">Cor</p>
+                  <p className="text-base font-semibold text-brand-900">{animalDetails.cor || "-"}</p>
+                </div>
+                <div className="rounded-xl border border-[var(--border)] bg-white p-4">
+                  <p className="text-xs uppercase tracking-wide text-[var(--muted)]">Nascimento</p>
+                  <p className="text-base font-semibold text-brand-900">{formatDate(animalDetails.dataNascimento)}</p>
+                </div>
+                <div className="rounded-xl border border-[var(--border)] bg-white p-4">
+                  <p className="text-xs uppercase tracking-wide text-[var(--muted)]">Proprietario</p>
+                  <p className="text-base font-semibold text-brand-900">
+                    {animalDetails.proprietario?.nome || "-"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {isAdmin && isCreateModalOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 overflow-y-auto">
