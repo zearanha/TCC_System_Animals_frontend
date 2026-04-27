@@ -20,6 +20,40 @@ Arquivo de referencia: `.env.example`.
 VITE_API_BASE_URL=http://localhost:3002
 ```
 
+## Estrutura
+
+```text
+TCC_System_Animals_frontend/
+  app/
+    agentes/
+    animais/
+    busca-codigo/
+    dashboard/
+    login/
+    notificacoes/
+    ocorrencias/
+    proprietarios/
+    usuarios/
+    globals.css
+  components/
+    forms/
+    layout/
+    providers/
+    ui/
+  hooks/
+  lib/
+  services/
+  src/
+    App.tsx
+    main.tsx
+    theme.ts
+    vite-env.d.ts
+  types/
+  index.html
+  vite.config.mts
+  package.json
+```
+
 ## Executando em Desenvolvimento
 
 No diretorio do frontend:
@@ -48,6 +82,15 @@ npm run preview
 - `npm run type-check` - checagem de tipos
 - `npm run lint` - checagem de tipos (alias)
 
+## UI e Layout
+
+- Tema compartilhado em `src/theme.ts` (paleta e tipografia para Chakra e MUI)
+- Providers globais em `src/main.tsx`:
+  - `ThemeProvider` + `CssBaseline` (MUI)
+  - `ChakraProvider` (Chakra UI)
+- Componentes base da interface em `components/ui`
+- `app/globals.css` contem estilos globais e classes utilitarias de compatibilidade para telas legadas
+
 ## Rotas e Perfis
 
 | Rota | ADMIN | AGENTE | PROPRIETARIO |
@@ -61,3 +104,18 @@ npm run preview
 | `/ocorrencias/nova` | Sim | Sim | Nao |
 | `/busca-codigo` | Sim | Sim | Nao |
 | `/notificacoes` | Sim | Nao | Sim |
+
+Rota inicial por perfil:
+
+- `ADMIN` -> `/dashboard`
+- `AGENTE` -> `/ocorrencias/nova`
+- `PROPRIETARIO` -> `/animais`
+
+## Integracao com Backend
+
+Padrao de desenvolvimento:
+
+- Frontend: `http://localhost:3001`
+- Backend (Docker): `http://localhost:3002`
+
+Se o backend estiver rodando localmente em outra porta, ajuste `VITE_API_BASE_URL`.
