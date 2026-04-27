@@ -1,3 +1,4 @@
+import { Text, VStack } from "@chakra-ui/react";
 import { Card } from "./Card";
 
 interface StatCardProps {
@@ -8,11 +9,18 @@ interface StatCardProps {
 
 export function StatCard({ title, value, hint }: StatCardProps) {
   return (
-    <Card className="space-y-3">
-      <p className="text-sm font-medium text-[var(--muted)]">{title}</p>
-      <p className="font-[var(--font-heading)] text-4xl font-semibold text-brand-900">{value}</p>
-      <p className="text-xs uppercase tracking-wide text-brand-600">{hint}</p>
+    <Card>
+      <VStack align="start" spacing={3}>
+        <Text fontSize="sm" fontWeight="medium" color="gray.600">
+          {title}
+        </Text>
+        <Text fontFamily="heading" fontSize="4xl" fontWeight="semibold" color="brand.900">
+          {value}
+        </Text>
+        <Text fontSize="xs" textTransform="uppercase" letterSpacing="wide" color="brand.600">
+          {hint}
+        </Text>
+      </VStack>
     </Card>
   );
 }
-

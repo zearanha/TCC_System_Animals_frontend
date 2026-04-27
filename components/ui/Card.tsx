@@ -1,15 +1,17 @@
 import { HTMLAttributes } from "react";
-import { cn } from "@/lib/cn";
+import { Box } from "@chakra-ui/react";
 
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
-      className={cn(
-        "rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-card",
-        className
-      )}
+    <Box
+      className={className}
+      borderRadius="2xl"
+      borderWidth="1px"
+      borderColor="gray.200"
+      bg="white"
+      p={5}
+      boxShadow="0 10px 30px rgba(22, 50, 34, 0.08)"
       {...props}
     />
   );
 }
-

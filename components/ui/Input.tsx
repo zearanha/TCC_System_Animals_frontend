@@ -1,20 +1,24 @@
 import { InputHTMLAttributes, forwardRef } from "react";
-import { cn } from "@/lib/cn";
+import { Input as ChakraInput } from "@chakra-ui/react";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "size"> {
   error?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, error, ...props }, ref) => {
     return (
-      <input
+      <ChakraInput
         ref={ref}
-        className={cn(
-          "w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2.5 text-sm text-[var(--text)] placeholder:text-slate-400",
-          error && "border-red-400",
-          className
-        )}
+        className={className}
+        borderRadius="xl"
+        bg="white"
+        borderColor={error ? "red.400" : "gray.300"}
+        _focusVisible={{ borderColor: error ? "red.500" : "brand.600", boxShadow: "none" }}
+        _placeholder={{ color: "gray.400" }}
+        fontSize="sm"
+        px={3}
+        py={2.5}
         {...props}
       />
     );
@@ -22,4 +26,3 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 );
 
 Input.displayName = "Input";
-

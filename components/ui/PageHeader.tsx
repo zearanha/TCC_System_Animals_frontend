@@ -1,3 +1,5 @@
+import { Text, VStack } from "@chakra-ui/react";
+
 interface PageHeaderProps {
   title: string;
   description: string;
@@ -5,12 +7,13 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description }: PageHeaderProps) {
   return (
-    <div className="space-y-1">
-      <h1 className="font-[var(--font-heading)] text-2xl font-semibold text-brand-900 md:text-3xl">
+    <VStack align="start" spacing={1}>
+      <Text as="h1" fontFamily="heading" fontSize={{ base: "2xl", md: "3xl" }} fontWeight="semibold" color="brand.900">
         {title}
-      </h1>
-      <p className="text-sm text-[var(--muted)] md:text-base">{description}</p>
-    </div>
+      </Text>
+      <Text fontSize={{ base: "sm", md: "md" }} color="gray.600">
+        {description}
+      </Text>
+    </VStack>
   );
 }
-

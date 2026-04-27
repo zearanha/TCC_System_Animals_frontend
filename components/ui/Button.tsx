@@ -1,7 +1,7 @@
 "use client";
 
 import { ButtonHTMLAttributes } from "react";
-import { cn } from "@/lib/cn";
+import { Button as ChakraButton, Spinner } from "@chakra-ui/react";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
@@ -10,11 +10,27 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
 }
 
-const variantClasses: Record<ButtonVariant, string> = {
-  primary: "bg-brand-600 text-white hover:bg-brand-700",
-  secondary: "bg-accent-100 text-accent-800 hover:bg-accent-200",
-  ghost: "bg-transparent text-brand-700 hover:bg-brand-50",
-  danger: "bg-red-600 text-white hover:bg-red-700"
+const variantStyles: Record<ButtonVariant, object> = {
+  primary: {
+    bg: "brand.600",
+    color: "white",
+    _hover: { bg: "brand.700" }
+  },
+  secondary: {
+    bg: "accent.100",
+    color: "accent.800",
+    _hover: { bg: "accent.200" }
+  },
+  ghost: {
+    bg: "transparent",
+    color: "brand.700",
+    _hover: { bg: "brand.50" }
+  },
+  danger: {
+    bg: "red.600",
+    color: "white",
+    _hover: { bg: "red.700" }
+  }
 };
 
 export function Button({
@@ -26,17 +42,26 @@ export function Button({
   ...props
 }: ButtonProps) {
   return (
-    <button
-      className={cn(
-        "inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60",
-        variantClasses[variant],
-        className
-      )}
-      disabled={disabled || isLoading}
+    <ChakraButton
+      className={className}
+      borderRadius="xl"
+      px={4}
+      py={2.5}
+      fontSize="sm"
+      fontWeight="semibold"
+      transition="background-color 0.2s ease"
+      isDisabled={disabled || isLoading}
+      sx={variantStyles[variant]}
       {...props}
     >
-      {isLoading ? "Carregando..." : children}
-    </button>
+      {isLoading ? (
+        <>
+          <Spinner size="sm" />
+          Carregando...
+        </>
+      ) : (
+        children
+      )}
+    </ChakraButton>
   );
 }
-

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { PageHeader, StatCard, StatusAlert, Button, Card } from "@/components/ui";
 import { useDashboardData } from "@/hooks";
 
@@ -58,7 +58,7 @@ export default function DashboardPage() {
           {shortcuts.map((shortcut) => (
             <Link
               key={shortcut.href}
-              href={shortcut.href}
+              to={shortcut.href}
               className="rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm font-semibold text-brand-800 transition-colors hover:bg-brand-100"
             >
               {shortcut.label}

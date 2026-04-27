@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { FormControl, FormErrorMessage, FormLabel } from "@chakra-ui/react";
 
 interface FormFieldProps {
   label: string;
@@ -8,11 +9,12 @@ interface FormFieldProps {
 
 export function FormField({ label, error, children }: FormFieldProps) {
   return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-semibold text-brand-900">{label}</span>
+    <FormControl isInvalid={Boolean(error)}>
+      <FormLabel mb={1.5} fontSize="sm" fontWeight="semibold" color="brand.900">
+        {label}
+      </FormLabel>
       {children}
-      {error ? <span className="text-xs text-red-600">{error}</span> : null}
-    </label>
+      {error ? <FormErrorMessage fontSize="xs">{error}</FormErrorMessage> : null}
+    </FormControl>
   );
 }
-

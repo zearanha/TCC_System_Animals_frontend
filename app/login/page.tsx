@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { FormField } from "@/components/forms";
 import { Button, Card, Input, StatusAlert } from "@/components/ui";
 import { useAuth } from "@/hooks";
@@ -42,7 +42,7 @@ const initialRegisterForm: RegisterFormState = {
 };
 
 export default function LoginPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { signIn, signUpProprietario } = useAuth();
 
   const [activeTab, setActiveTab] = useState<AuthTab>("login");
@@ -104,7 +104,7 @@ export default function LoginPage() {
         senha: loginForm.senha,
       });
 
-      router.replace(getDefaultRouteForRole(user.perfil));
+      navigate(getDefaultRouteForRole(user.perfil), { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Nao foi possivel realizar login.");
     } finally {
@@ -130,7 +130,7 @@ export default function LoginPage() {
       });
 
       setSuccess("Conta criada com sucesso.");
-      router.replace(getDefaultRouteForRole(user.perfil));
+      navigate(getDefaultRouteForRole(user.perfil), { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Nao foi possivel criar a conta.");
     } finally {

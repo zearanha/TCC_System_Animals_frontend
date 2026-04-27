@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "@/lib/cn";
+import { Box, Flex, Text, VStack } from "@chakra-ui/react";
+import { Link as RouterLink, useLocation } from "react-router-dom";
+import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import { useAuth } from "@/hooks";
 import { UserRole } from "@/types";
+import { Button } from "@/components/ui";
 
 interface NavItem {
   href: string;
@@ -45,7 +46,7 @@ const navItems: NavItem[] = [
 ];
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
-  const pathname = usePathname();
+  const { pathname } = useLocation();
   const { user, signOut } = useAuth();
 
   if (!user) return null;
@@ -58,54 +59,86 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   }
 
   return (
-    <aside className="flex h-full w-full flex-col rounded-2xl border border-brand-200 bg-brand-900 p-4 text-brand-50 shadow-card">
-      <div className="mb-6">
-        <p className="font-[var(--font-heading)] text-lg font-semibold">Monitoramento Animal</p>
-        <p className="text-xs text-brand-200">Painel municipal</p>
-      </div>
+    <Flex
+      h="100%"
+      w="100%"
+      direction="column"
+      borderRadius="2xl"
+      borderWidth="1px"
+      borderColor="brand.200"
+      bg="brand.900"
+      p={4}
+      color="brand.50"
+      boxShadow="0 10px 30px rgba(22, 50, 34, 0.08)"
+    >
+      <Box mb={6}>
+        <Text fontFamily="heading" fontSize="lg" fontWeight="semibold">
+          Monitoramento Animal
+        </Text>
+        <Text fontSize="xs" color="brand.200">
+          Painel municipal
+        </Text>
+      </Box>
 
-      <nav className="flex flex-col gap-1.5">
+      <VStack as="nav" spacing={1.5} align="stretch">
         {visibleItems.map((item) => {
           const active = pathname === item.href;
           return (
-            <Link
+            <Flex
               key={item.href}
-              href={item.href}
+              as={RouterLink}
+              to={item.href}
               onClick={onNavigate}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors duration-200",
-                active ? "bg-brand-100 text-brand-900" : "text-brand-100 hover:bg-brand-800"
-              )}
+              align="center"
+              gap={3}
+              borderRadius="xl"
+              px={3}
+              py={2.5}
+              fontSize="sm"
+              transition="background-color 0.2s ease"
+              bg={active ? "brand.100" : "transparent"}
+              color={active ? "brand.900" : "brand.100"}
+              _hover={{ bg: active ? "brand.100" : "brand.800" }}
             >
-              <span
-                className={cn(
-                  "inline-flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold",
-                  active ? "bg-brand-900 text-brand-50" : "bg-brand-700 text-brand-100"
-                )}
+              <Flex
+                h={7}
+                w={7}
+                align="center"
+                justify="center"
+                borderRadius="full"
+                fontSize="11px"
+                fontWeight="bold"
+                bg={active ? "brand.900" : "brand.700"}
+                color={active ? "brand.50" : "brand.100"}
               >
                 {item.badge}
-              </span>
+              </Flex>
               {item.label}
-            </Link>
+            </Flex>
           );
         })}
-      </nav>
+      </VStack>
 
-      <div className="mt-auto space-y-3 pt-5">
-        <div className="rounded-xl border border-brand-700 bg-brand-800/80 p-3">
-          <p className="text-sm font-semibold text-brand-50">{user.nome}</p>
-          <p className="text-xs text-brand-200">{user.email}</p>
-          <p className="mt-1 text-[11px] uppercase tracking-wide text-brand-300">{user.perfil}</p>
-        </div>
+      <VStack mt="auto" spacing={3} pt={5} align="stretch">
+        <Box borderRadius="xl" borderWidth="1px" borderColor="brand.700" bg="rgba(46, 69, 50, 0.8)" p={3}>
+          <Text fontSize="sm" fontWeight="semibold" color="brand.50">
+            {user.nome}
+          </Text>
+          <Text fontSize="xs" color="brand.200">
+            {user.email}
+          </Text>
+          <Text mt={1} fontSize="11px" textTransform="uppercase" letterSpacing="wide" color="brand.300">
+            {user.perfil}
+          </Text>
+        </Box>
 
-        <button
-          type="button"
-          onClick={() => void handleSignOut()}
-          className="w-full rounded-xl border border-brand-600 bg-brand-700 px-3 py-2 text-sm font-semibold text-brand-50 transition-colors hover:bg-brand-600"
-        >
-          Sair
-        </button>
-      </div>
-    </aside>
+        <Button type="button" onClick={() => void handleSignOut()} className="w-full">
+          <ExitToAppIcon fontSize="small" />
+          <Box as="span" ml={2}>
+            Sair
+          </Box>
+        </Button>
+      </VStack>
+    </Flex>
   );
 }

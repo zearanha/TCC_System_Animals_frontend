@@ -1,9 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import {
+  Box,
+  Button,
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerOverlay,
+  Flex,
+  Text,
+} from "@chakra-ui/react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
-import { cn } from "@/lib/cn";
 import { canAccessPath, getDefaultRouteForRole, isPublicPath } from "@/lib/access";
 import { useAuth } from "@/hooks";
 
@@ -13,8 +22,8 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { loading, isAuthenticated, user } = useAuth();
   const publicPath = isPublicPath(pathname);
   const hasAccess = user ? canAccessPath(user.perfil, pathname) : false;
@@ -23,7 +32,7 @@ export function AppShell({ children }: AppShellProps) {
     if (loading) return;
 
     if (!isAuthenticated) {
-      if (!publicPath) router.replace("/login");
+      if (!publicPath) navigate("/login", { replace: true });
       return;
     }
 
@@ -32,22 +41,32 @@ export function AppShell({ children }: AppShellProps) {
     const fallback = getDefaultRouteForRole(user.perfil);
 
     if (publicPath) {
-      router.replace(fallback);
+      navigate(fallback, { replace: true });
       return;
     }
 
     if (!canAccessPath(user.perfil, pathname)) {
-      router.replace(fallback);
+      navigate(fallback, { replace: true });
     }
-  }, [loading, isAuthenticated, user, publicPath, pathname, router]);
+  }, [loading, isAuthenticated, user, publicPath, pathname, navigate]);
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--muted)] shadow-card">
+      <Flex minH="100vh" align="center" justify="center" px={4}>
+        <Box
+          borderRadius="xl"
+          borderWidth="1px"
+          borderColor="gray.200"
+          bg="white"
+          px={4}
+          py={3}
+          fontSize="sm"
+          color="gray.600"
+          boxShadow="0 10px 30px rgba(22, 50, 34, 0.08)"
+        >
           Carregando sessao...
-        </div>
-      </div>
+        </Box>
+      </Flex>
     );
   }
 
@@ -63,39 +82,51 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="min-h-screen px-4 py-4 md:px-6 md:py-6">
-      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-7xl gap-4 md:gap-6">
-        <div className="hidden w-80 shrink-0 md:block">
+    <Box minH="100vh" px={{ base: 4, md: 6 }} py={{ base: 4, md: 6 }}>
+      <Flex mx="auto" maxW="1120px" minH="calc(100vh - 2rem)" gap={{ base: 4, md: 6 }}>
+        <Box display={{ base: "none", md: "block" }} w="320px" flexShrink={0}>
           <Sidebar />
-        </div>
+        </Box>
 
-        <div className="flex-1 rounded-2xl border border-[var(--border)] bg-white/75 p-4 shadow-card backdrop-blur-sm md:p-6">
-          <div className="mb-4 flex items-center justify-between md:hidden">
-            <button
-              className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm font-semibold"
+        <Box
+          flex="1"
+          borderRadius="2xl"
+          borderWidth="1px"
+          borderColor="gray.200"
+          bg="rgba(255, 255, 255, 0.75)"
+          p={{ base: 4, md: 6 }}
+          boxShadow="0 10px 30px rgba(22, 50, 34, 0.08)"
+          backdropFilter="blur(6px)"
+        >
+          <Flex mb={4} align="center" justify="space-between" display={{ base: "flex", md: "none" }}>
+            <Button
+              borderRadius="lg"
+              borderWidth="1px"
+              borderColor="gray.200"
+              bg="white"
+              fontSize="sm"
+              fontWeight="semibold"
               onClick={() => setOpen((current) => !current)}
             >
               Menu
-            </button>
-            <span className="text-xs font-semibold uppercase tracking-wide text-brand-700">
+            </Button>
+            <Text fontSize="xs" fontWeight="semibold" textTransform="uppercase" letterSpacing="wide" color="brand.700">
               Painel Municipal
-            </span>
-          </div>
+            </Text>
+          </Flex>
 
-          <div className="min-h-[70vh]">{children}</div>
-        </div>
-      </div>
+          <Box minH="70vh">{children}</Box>
+        </Box>
+      </Flex>
 
-      <div
-        className={cn(
-          "fixed inset-0 z-40 bg-black/30 p-4 transition-opacity md:hidden",
-          open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-        )}
-      >
-        <div className="h-full w-full max-w-xs">
-          <Sidebar onNavigate={() => setOpen(false)} />
-        </div>
-      </div>
-    </div>
+      <Drawer isOpen={open} placement="left" onClose={() => setOpen(false)} size="xs">
+        <DrawerOverlay />
+        <DrawerContent bg="transparent" boxShadow="none">
+          <DrawerBody p={4}>
+            <Sidebar onNavigate={() => setOpen(false)} />
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+    </Box>
   );
 }

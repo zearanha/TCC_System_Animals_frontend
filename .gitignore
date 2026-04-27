@@ -1,8 +1,8 @@
-.next
 node_modules
 out
 dist
 build
+.vite
 *.tsbuildinfo
 .env.local
 .env.*.local

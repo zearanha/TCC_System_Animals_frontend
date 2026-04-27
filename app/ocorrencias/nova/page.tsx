@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { FormField } from "@/components/forms";
 import {
@@ -238,7 +238,7 @@ export default function RegistroOcorrenciaPage() {
 
                 <div className="flex flex-wrap gap-2">
                   <Link
-                    href="/agentes"
+                    to="/agentes"
                     className="inline-flex items-center justify-center rounded-xl bg-accent-100 px-3 py-1.5 text-xs font-semibold text-accent-800 transition-colors hover:bg-accent-200"
                   >
                     Ir para modulo de agentes

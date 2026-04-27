@@ -1,27 +1,29 @@
 import { SelectHTMLAttributes, forwardRef } from "react";
-import { cn } from "@/lib/cn";
+import { Select as ChakraSelect } from "@chakra-ui/react";
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "size"> {
   error?: string;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, error, children, ...props }, ref) => {
     return (
-      <select
+      <ChakraSelect
         ref={ref}
-        className={cn(
-          "w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2.5 text-sm text-[var(--text)]",
-          error && "border-red-400",
-          className
-        )}
+        className={className}
+        borderRadius="xl"
+        bg="white"
+        borderColor={error ? "red.400" : "gray.300"}
+        _focusVisible={{ borderColor: error ? "red.500" : "brand.600", boxShadow: "none" }}
+        fontSize="sm"
+        px={3}
+        py={2.5}
         {...props}
       >
         {children}
-      </select>
+      </ChakraSelect>
     );
   }
 );
 
 Select.displayName = "Select";
-

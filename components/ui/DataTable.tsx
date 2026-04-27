@@ -1,5 +1,12 @@
 import { ReactNode } from "react";
-import { Card } from "./Card";
+import { Box, Text } from "@chakra-ui/react";
+import Paper from "@mui/material/Paper";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
 
 interface TableColumn<T> {
   header: string;
@@ -22,50 +29,51 @@ export function DataTable<T>({
   emptyMessage = "Sem registros para exibir."
 }: DataTableProps<T>) {
   return (
-    <Card className="overflow-hidden p-0">
-      <div className="border-b border-[var(--border)] px-5 py-4">
-        <h2 className="font-[var(--font-heading)] text-lg font-semibold text-brand-900">{title}</h2>
-      </div>
+    <Paper sx={{ borderRadius: "16px", overflow: "hidden", border: "1px solid #d5e1d8" }}>
+      <Box borderBottom="1px solid" borderColor="gray.200" px={5} py={4} bg="white">
+        <Text as="h2" fontFamily="heading" fontSize="lg" fontWeight="semibold" color="brand.900">
+          {title}
+        </Text>
+      </Box>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-sm">
-          <thead className="bg-brand-50 text-brand-800">
-            <tr>
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "#f4f9f5" }}>
               {columns.map((column) => (
-                <th key={column.header} className="px-4 py-3 font-semibold">
+                <TableCell key={column.header} sx={{ fontWeight: 700, color: "#2e4532" }}>
                   {column.header}
-                </th>
+                </TableCell>
               ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--border)] bg-white">
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {loading ? (
-              <tr>
-                <td className="px-4 py-5 text-[var(--muted)]" colSpan={columns.length}>
+              <TableRow>
+                <TableCell colSpan={columns.length} sx={{ py: 3, color: "#60756a" }}>
                   Carregando...
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : data.length === 0 ? (
-              <tr>
-                <td className="px-4 py-5 text-[var(--muted)]" colSpan={columns.length}>
+              <TableRow>
+                <TableCell colSpan={columns.length} sx={{ py: 3, color: "#60756a" }}>
                   {emptyMessage}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               data.map((row, index) => (
-                <tr key={index} className="hover:bg-brand-50/40">
+                <TableRow key={index} hover>
                   {columns.map((column) => (
-                    <td key={column.header} className="px-4 py-3 text-slate-700">
+                    <TableCell key={column.header} sx={{ py: 1.5, color: "#334155" }}>
                       {column.render(row)}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
-    </Card>
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Paper>
   );
 }
-

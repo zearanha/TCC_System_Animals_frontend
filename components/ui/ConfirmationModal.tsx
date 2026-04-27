@@ -1,5 +1,10 @@
 "use client";
 
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import Typography from "@mui/material/Typography";
 import { Button } from "./Button";
 
 interface ConfirmationModalProps {
@@ -23,28 +28,30 @@ export function ConfirmationModal({
   onConfirm,
   onCancel
 }: ConfirmationModalProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-white p-5 shadow-card"
-      >
-        <h2 className="font-[var(--font-heading)] text-lg font-semibold text-brand-900">{title}</h2>
-        <p className="mt-2 text-sm text-[var(--muted)]">{message}</p>
-
-        <div className="mt-5 flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onCancel} disabled={isLoading}>
-            {cancelLabel}
-          </Button>
-          <Button type="button" variant="danger" onClick={onConfirm} isLoading={isLoading}>
-            {confirmLabel}
-          </Button>
-        </div>
-      </div>
-    </div>
+    <Dialog
+      open={isOpen}
+      onClose={isLoading ? undefined : onCancel}
+      fullWidth
+      maxWidth="sm"
+      PaperProps={{ sx: { borderRadius: "16px", border: "1px solid #d5e1d8" } }}
+    >
+      <DialogTitle sx={{ fontFamily: "Archivo, sans-serif", fontWeight: 700, color: "#273a2b" }}>
+        {title}
+      </DialogTitle>
+      <DialogContent>
+        <Typography variant="body2" sx={{ color: "#60756a" }}>
+          {message}
+        </Typography>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2.5 }}>
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={isLoading}>
+          {cancelLabel}
+        </Button>
+        <Button type="button" variant="danger" onClick={onConfirm} isLoading={isLoading}>
+          {confirmLabel}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }
