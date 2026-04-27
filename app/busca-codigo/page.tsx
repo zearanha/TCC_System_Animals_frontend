@@ -6,6 +6,7 @@ import { useDebounce } from "@/hooks";
 import { findAnimalByCodigo } from "@/services";
 import { Animal } from "@/types";
 import { formatDate } from "@/lib/formatters";
+import { resolveApiAssetUrl } from "@/lib/media";
 import { isValidGbCode } from "@/lib/validators";
 
 export default function BuscaCodigoPage() {
@@ -99,6 +100,34 @@ export default function BuscaCodigoPage() {
             <p>
               <strong>Nascimento:</strong> {formatDate(resultado.dataNascimento)}
             </p>
+            <div>
+              <strong>Imagens de identificacao:</strong>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
+                {resultado.identificacao?.imagens?.length ? (
+                  resultado.identificacao.imagens.map((imagem) => {
+                    const url = resolveApiAssetUrl(imagem.imagemUrl);
+                    if (!url) return null;
+
+                    return (
+                      <img
+                        key={imagem.id}
+                        src={url}
+                        alt="Imagem de identificacao do animal"
+                        style={{
+                          width: "72px",
+                          height: "72px",
+                          borderRadius: "8px",
+                          objectFit: "cover"
+                        }}
+                        loading="lazy"
+                      />
+                    );
+                  })
+                ) : (
+                  <span>-</span>
+                )}
+              </div>
+            </div>
           </Card>
 
           <Card className="space-y-3">
@@ -120,6 +149,26 @@ export default function BuscaCodigoPage() {
             <p>
               <strong>Endereco:</strong> {resultado.proprietario?.endereco ?? "-"}
             </p>
+            <div>
+              <strong>Foto de perfil:</strong>
+              <div style={{ marginTop: "8px" }}>
+                {resolveApiAssetUrl(resultado.proprietario?.fotoPerfilUrl) ? (
+                  <img
+                    src={resolveApiAssetUrl(resultado.proprietario?.fotoPerfilUrl) ?? ""}
+                    alt={`Foto de ${resultado.proprietario?.nome ?? "proprietario"}`}
+                    style={{
+                      width: "72px",
+                      height: "72px",
+                      borderRadius: "9999px",
+                      objectFit: "cover"
+                    }}
+                    loading="lazy"
+                  />
+                ) : (
+                  <span>-</span>
+                )}
+              </div>
+            </div>
           </Card>
         </div>
       ) : null}

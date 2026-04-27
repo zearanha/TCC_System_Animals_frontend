@@ -4,7 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { FormField } from "@/components/forms";
 import { Button, Card, Input, PageHeader, StatusAlert } from "@/components/ui";
 import { useAsyncAction } from "@/hooks";
-import { createProprietario } from "@/services";
+import { createProprietario, updateProprietario } from "@/services";
 import { CreateProprietarioPayload } from "@/types";
 import { formatCpf } from "@/lib/formatters";
 import { isValidCpf, isValidEmail } from "@/lib/validators";
@@ -21,6 +21,7 @@ const initialForm: CreateProprietarioPayload = {
 
 export default function CadastroProprietarioPage() {
   const [form, setForm] = useState<CreateProprietarioPayload>(initialForm);
+  const [foto, setFoto] = useState<File | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const { loading, error, success, run, clearMessages } = useAsyncAction();
 
@@ -59,12 +60,23 @@ export default function CadastroProprietarioPage() {
       cpf: form.cpf.replace(/\D/g, "")
     };
 
-    const result = await run(() => createProprietario(payload), {
-      successMessage: "Proprietario cadastrado com sucesso."
+    const result = await run(async () => {
+      const created = await createProprietario(payload);
+
+      if (foto) {
+        await updateProprietario(created.id, {}, foto);
+      }
+
+      return created;
+    }, {
+      successMessage: foto
+        ? "Proprietario e foto de perfil cadastrados com sucesso."
+        : "Proprietario cadastrado com sucesso."
     });
 
     if (result) {
       setForm(initialForm);
+      setFoto(null);
       setErrors({});
     }
   }
@@ -127,6 +139,16 @@ export default function CadastroProprietarioPage() {
             />
           </FormField>
 
+          <div className="md:col-span-2">
+            <FormField label="Foto de perfil (opcional)">
+              <Input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(event) => setFoto(event.target.files?.[0] ?? null)}
+              />
+            </FormField>
+          </div>
+
           <div className="md:col-span-2 space-y-3 pt-2">
             {error ? <StatusAlert type="error" message={error} /> : null}
             {success ? <StatusAlert type="success" message={success} /> : null}
@@ -139,4 +161,3 @@ export default function CadastroProprietarioPage() {
     </div>
   );
 }
-

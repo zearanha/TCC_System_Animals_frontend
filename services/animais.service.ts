@@ -30,3 +30,20 @@ export async function findAnimalByCodigo(codigo: string): Promise<Animal | null>
     throw err;
   }
 }
+
+export async function uploadImagensIdentificacaoAnimal(
+  id: string,
+  imagens: File[]
+): Promise<Animal> {
+  const formData = new FormData();
+  imagens.forEach((imagem) => formData.append("imagens", imagem));
+
+  return api.post<Animal>(`/animais/${id}/imagens-identificacao`, formData);
+}
+
+export async function deleteImagemIdentificacaoAnimal(
+  id: string,
+  imagemId: string
+): Promise<Animal> {
+  return api.delete<Animal>(`/animais/${id}/imagens-identificacao/${imagemId}`);
+}

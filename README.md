@@ -2,6 +2,14 @@
 
 Aplicacao web em React + Vite para operacao do sistema municipal de animais, com login por perfil (`ADMIN`, `AGENTE`, `PROPRIETARIO`) e controle de acesso por rota.
 
+## Funcionalidades
+
+- Cadastro e gestao de proprietarios, agentes, usuarios, animais, ocorrencias e notificacoes
+- Upload de foto de perfil para proprietarios
+- Upload e exibicao de imagens de identificacao dos animais
+- Consulta por codigo de identificacao com visualizacao das imagens do animal e do proprietario
+- Notificacoes agrupadas por ocorrencia/proprietario com canais exibidos em conjunto (`EMAIL + WHATSAPP`)
+
 ## Stack
 
 - React 19
@@ -117,5 +125,10 @@ Padrao de desenvolvimento:
 
 - Frontend: `http://localhost:3001`
 - Backend (Docker): `http://localhost:3002`
+
+Observacoes importantes:
+
+- Arquivos de imagem usam URL publica do backend (`/uploads/...`), resolvida automaticamente pelo frontend.
+- Para envio real de email/WhatsApp, o backend precisa estar configurado com SMTP e webhook de WhatsApp.
 
 Se o backend estiver rodando localmente em outra porta, ajuste `VITE_API_BASE_URL`.

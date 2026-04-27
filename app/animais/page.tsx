@@ -5,7 +5,16 @@ import { FormField } from "@/components/forms";
 import { Button, ConfirmationModal, DataTable, Input, PageHeader, Select, StatusAlert } from "@/components/ui";
 import { useAuth } from "@/hooks";
 import { formatDate } from "@/lib/formatters";
-import { createAnimal, deleteAnimal, getAnimais, getProprietarios, updateAnimal } from "@/services";
+import { resolveApiAssetUrl } from "@/lib/media";
+import {
+  createAnimal,
+  deleteAnimal,
+  deleteImagemIdentificacaoAnimal,
+  getAnimais,
+  getProprietarios,
+  updateAnimal,
+  uploadImagensIdentificacaoAnimal
+} from "@/services";
 import { Animal, CreateAnimalPayload, PorteAnimal, Proprietario, SexoAnimal, UpdateAnimalPayload } from "@/types";
 
 type AnimalFormState = {
@@ -54,12 +63,15 @@ export default function ModuloAnimaisPage() {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createForm, setCreateForm] = useState<AnimalFormState>(initialForm);
+  const [createImages, setCreateImages] = useState<File[]>([]);
   const [createErrors, setCreateErrors] = useState<AnimalFormErrors>({});
   const [savingCreate, setSavingCreate] = useState(false);
 
   const [editForm, setEditForm] = useState<EditAnimalFormState | null>(null);
+  const [editImages, setEditImages] = useState<File[]>([]);
   const [editErrors, setEditErrors] = useState<AnimalFormErrors>({});
   const [savingEdit, setSavingEdit] = useState(false);
+  const [removingImageId, setRemovingImageId] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoadingList(true);
@@ -115,12 +127,14 @@ export default function ModuloAnimaisPage() {
     clearFeedback();
     setCreateErrors({});
     setCreateForm(initialForm);
+    setCreateImages([]);
     setIsCreateModalOpen(true);
   }
 
   function closeCreateModal() {
     setIsCreateModalOpen(false);
     setCreateErrors({});
+    setCreateImages([]);
   }
 
   function openEditModal(animal: Animal) {
@@ -137,11 +151,13 @@ export default function ModuloAnimaisPage() {
       dataNascimento: toDateInputValue(animal.dataNascimento),
       proprietarioId: animal.proprietarioId ?? ""
     });
+    setEditImages([]);
   }
 
   function closeEditModal() {
     setEditForm(null);
     setEditErrors({});
+    setEditImages([]);
   }
 
   function updateCreateField<K extends keyof AnimalFormState>(key: K, value: AnimalFormState[K]) {
@@ -169,8 +185,17 @@ export default function ModuloAnimaisPage() {
 
     setSavingCreate(true);
     try {
-      await createAnimal(payload);
-      setFeedbackSuccess("Animal cadastrado com sucesso.");
+      const createdAnimal = await createAnimal(payload);
+
+      if (createImages.length > 0) {
+        await uploadImagensIdentificacaoAnimal(createdAnimal.id, createImages);
+      }
+
+      setFeedbackSuccess(
+        createImages.length > 0
+          ? "Animal e imagens de identificacao cadastrados com sucesso."
+          : "Animal cadastrado com sucesso."
+      );
       closeCreateModal();
       await loadData();
     } catch (err) {
@@ -204,7 +229,16 @@ export default function ModuloAnimaisPage() {
     setSavingEdit(true);
     try {
       await updateAnimal(editForm.id, payload);
-      setFeedbackSuccess("Animal atualizado com sucesso.");
+
+      if (editImages.length > 0) {
+        await uploadImagensIdentificacaoAnimal(editForm.id, editImages);
+      }
+
+      setFeedbackSuccess(
+        editImages.length > 0
+          ? "Animal e imagens de identificacao atualizados com sucesso."
+          : "Animal atualizado com sucesso."
+      );
       closeEditModal();
       await loadData();
     } catch (err) {
@@ -232,6 +266,21 @@ export default function ModuloAnimaisPage() {
       setFeedbackError(err instanceof Error ? err.message : "Nao foi possivel excluir animal.");
     } finally {
       setDeletingId(null);
+    }
+  }
+
+  async function handleRemoveIdentificacaoImagem(animalId: string, imagemId: string) {
+    setRemovingImageId(imagemId);
+    clearFeedback();
+
+    try {
+      await deleteImagemIdentificacaoAnimal(animalId, imagemId);
+      setFeedbackSuccess("Imagem de identificacao removida com sucesso.");
+      await loadData();
+    } catch (err) {
+      setFeedbackError(err instanceof Error ? err.message : "Nao foi possivel remover a imagem.");
+    } finally {
+      setRemovingImageId(null);
     }
   }
 
@@ -276,6 +325,33 @@ export default function ModuloAnimaisPage() {
               </span>
             )
           },
+          {
+            header: "Imagens",
+            render: (animal) => {
+              const primeiraImagem = animal.identificacao?.imagens?.[0]?.imagemUrl;
+              const total = animal.identificacao?.imagens?.length ?? 0;
+              const url = resolveApiAssetUrl(primeiraImagem);
+
+              if (!url) return "-";
+
+              return (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <img
+                    src={url}
+                    alt={`Identificacao de ${animal.nome}`}
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "8px",
+                      objectFit: "cover"
+                    }}
+                    loading="lazy"
+                  />
+                  <span>{total} img.</span>
+                </div>
+              );
+            }
+          },
           { header: "Nome", render: (animal) => animal.nome },
           { header: "Especie", render: (animal) => animal.especie },
           { header: "Raca", render: (animal) => animal.raca },
@@ -311,12 +387,12 @@ export default function ModuloAnimaisPage() {
       />
 
       {isAdmin && isCreateModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 overflow-y-auto">
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Cadastrar animal"
-            className="w-full max-w-3xl rounded-2xl border border-[var(--border)] bg-white p-5 shadow-card"
+            className="w-full max-w-3xl rounded-2xl border border-[var(--border)] bg-white p-5 shadow-card max-h-[90vh] overflow-y-auto"
           >
             <div className="mb-4">
               <h2 className="font-[var(--font-heading)] text-xl font-semibold text-brand-900">
@@ -412,7 +488,18 @@ export default function ModuloAnimaisPage() {
                 </Select>
               </FormField>
 
-              <div className="md:col-span-2 mt-2 flex justify-end gap-2">
+              <div className="md:col-span-2">
+                <FormField label="Imagens de identificacao (opcional)">
+                  <Input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    multiple
+                    onChange={(event) => setCreateImages(Array.from(event.target.files ?? []))}
+                  />
+                </FormField>
+              </div>
+
+              <div className="md:col-span-2 mt-2 flex flex-wrap justify-end gap-2">
                 <Button type="button" variant="ghost" onClick={closeCreateModal} disabled={savingCreate}>
                   Cancelar
                 </Button>
@@ -426,12 +513,12 @@ export default function ModuloAnimaisPage() {
       ) : null}
 
       {isAdmin && editForm ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 overflow-y-auto">
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Editar animal"
-            className="w-full max-w-3xl rounded-2xl border border-[var(--border)] bg-white p-5 shadow-card"
+            className="w-full max-w-3xl rounded-2xl border border-[var(--border)] bg-white p-5 shadow-card max-h-[90vh] overflow-y-auto"
           >
             <div className="mb-4">
               <h2 className="font-[var(--font-heading)] text-xl font-semibold text-brand-900">
@@ -525,7 +612,61 @@ export default function ModuloAnimaisPage() {
                 </Select>
               </FormField>
 
-              <div className="md:col-span-2 mt-2 flex justify-end gap-2">
+              <div className="md:col-span-2">
+                <FormField label="Imagens atuais de identificacao">
+                  {animais
+                    .find((item) => item.id === editForm.id)
+                    ?.identificacao?.imagens?.map((imagem) => {
+                      const imageUrl = resolveApiAssetUrl(imagem.imagemUrl);
+                      if (!imageUrl) return null;
+
+                      return (
+                        <div
+                          key={imagem.id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            marginBottom: "8px"
+                          }}
+                        >
+                          <img
+                            src={imageUrl}
+                            alt="Imagem de identificacao"
+                            style={{
+                              width: "64px",
+                              height: "64px",
+                              borderRadius: "8px",
+                              objectFit: "cover"
+                            }}
+                            loading="lazy"
+                          />
+                          <Button
+                            type="button"
+                            variant="danger"
+                            isLoading={removingImageId === imagem.id}
+                            onClick={() => void handleRemoveIdentificacaoImagem(editForm.id, imagem.id)}
+                          >
+                            Remover imagem
+                          </Button>
+                        </div>
+                      );
+                    })}
+                </FormField>
+              </div>
+
+              <div className="md:col-span-2">
+                <FormField label="Adicionar novas imagens (opcional)">
+                  <Input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    multiple
+                    onChange={(event) => setEditImages(Array.from(event.target.files ?? []))}
+                  />
+                </FormField>
+              </div>
+
+              <div className="md:col-span-2 mt-2 flex flex-wrap justify-end gap-2">
                 <Button type="button" variant="ghost" onClick={closeEditModal} disabled={savingEdit}>
                   Cancelar
                 </Button>

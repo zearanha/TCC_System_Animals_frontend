@@ -5,6 +5,7 @@ export interface Proprietario {
   telefone: string | null;
   email: string | null;
   endereco: string | null;
+  fotoPerfilUrl?: string | null;
   animais?: Array<{
     id: string;
   }>;

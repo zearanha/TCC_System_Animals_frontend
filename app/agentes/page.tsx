@@ -270,12 +270,12 @@ export default function ModuloAgentesPage() {
       />
 
       {isCreateModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 overflow-y-auto">
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Cadastrar agente"
-            className="w-full max-w-2xl rounded-2xl border border-[var(--border)] bg-white p-5 shadow-card"
+            className="w-full max-w-2xl rounded-2xl border border-[var(--border)] bg-white p-5 shadow-card max-h-[90vh] overflow-y-auto"
           >
             <div className="mb-4">
               <h2 className="font-[var(--font-heading)] text-xl font-semibold text-brand-900">
@@ -322,7 +322,7 @@ export default function ModuloAgentesPage() {
                 />
               </FormField>
 
-              <div className="md:col-span-2 mt-2 flex justify-end gap-2">
+              <div className="md:col-span-2 mt-2 flex flex-wrap justify-end gap-2">
                 <Button type="button" variant="ghost" onClick={closeCreateModal} disabled={isCreating}>
                   Cancelar
                 </Button>
@@ -336,12 +336,12 @@ export default function ModuloAgentesPage() {
       ) : null}
 
       {editForm ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 overflow-y-auto">
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Editar agente"
-            className="w-full max-w-2xl rounded-2xl border border-[var(--border)] bg-white p-5 shadow-card"
+            className="w-full max-w-2xl rounded-2xl border border-[var(--border)] bg-white p-5 shadow-card max-h-[90vh] overflow-y-auto"
           >
             <div className="mb-4">
               <h2 className="font-[var(--font-heading)] text-xl font-semibold text-brand-900">
@@ -386,7 +386,7 @@ export default function ModuloAgentesPage() {
                 />
               </FormField>
 
-              <div className="md:col-span-2 mt-2 flex justify-end gap-2">
+              <div className="md:col-span-2 mt-2 flex flex-wrap justify-end gap-2">
                 <Button type="button" variant="ghost" onClick={closeEditModal} disabled={isEditing}>
                   Cancelar
                 </Button>

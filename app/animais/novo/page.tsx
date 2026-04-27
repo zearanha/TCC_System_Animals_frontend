@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { FormField } from "@/components/forms";
 import { Button, Card, Input, PageHeader, Select, StatusAlert } from "@/components/ui";
 import { useAsyncAction } from "@/hooks";
-import { createAnimal, getProprietarios } from "@/services";
+import { createAnimal, getProprietarios, uploadImagensIdentificacaoAnimal } from "@/services";
 import { CreateAnimalPayload, PorteAnimal, Proprietario, SexoAnimal } from "@/types";
 
 type FormErrors = Partial<Record<keyof CreateAnimalPayload, string>>;
@@ -25,6 +25,7 @@ const sexoOptions: SexoAnimal[] = ["MACHO", "FEMEA"];
 
 export default function CadastroAnimalPage() {
   const [form, setForm] = useState<CreateAnimalPayload>(initialForm);
+  const [imagens, setImagens] = useState<File[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [proprietarios, setProprietarios] = useState<Proprietario[]>([]);
   const [loadingProprietarios, setLoadingProprietarios] = useState(true);
@@ -77,12 +78,23 @@ export default function CadastroAnimalPage() {
       dataNascimento: `${form.dataNascimento}T00:00:00.000Z`
     };
 
-    const result = await run(() => createAnimal(payload), {
-      successMessage: "Animal cadastrado com sucesso. O codigo de identificacao foi gerado automaticamente."
+    const result = await run(async () => {
+      const created = await createAnimal(payload);
+
+      if (imagens.length > 0) {
+        await uploadImagensIdentificacaoAnimal(created.id, imagens);
+      }
+
+      return created;
+    }, {
+      successMessage: imagens.length > 0
+        ? "Animal e imagens de identificacao cadastrados com sucesso."
+        : "Animal cadastrado com sucesso. O codigo de identificacao foi gerado automaticamente."
     });
 
     if (result) {
       setForm(initialForm);
+      setImagens([]);
       setErrors({});
     }
   }
@@ -186,6 +198,17 @@ export default function CadastroAnimalPage() {
               ))}
             </Select>
           </FormField>
+
+          <div className="md:col-span-2">
+            <FormField label="Imagens de identificacao (opcional)">
+              <Input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                multiple
+                onChange={(event) => setImagens(Array.from(event.target.files ?? []))}
+              />
+            </FormField>
+          </div>
 
           <div className="md:col-span-2 space-y-3 pt-2">
             {proprietariosError ? <StatusAlert type="error" message={proprietariosError} /> : null}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -11,7 +11,7 @@ import {
   Flex,
   Text,
 } from "@chakra-ui/react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { canAccessPath, getDefaultRouteForRole, isPublicPath } from "@/lib/access";
 import { useAuth } from "@/hooks";
@@ -23,32 +23,8 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   const { loading, isAuthenticated, user } = useAuth();
   const publicPath = isPublicPath(pathname);
-  const hasAccess = user ? canAccessPath(user.perfil, pathname) : false;
-
-  useEffect(() => {
-    if (loading) return;
-
-    if (!isAuthenticated) {
-      if (!publicPath) navigate("/login", { replace: true });
-      return;
-    }
-
-    if (!user) return;
-
-    const fallback = getDefaultRouteForRole(user.perfil);
-
-    if (publicPath) {
-      navigate(fallback, { replace: true });
-      return;
-    }
-
-    if (!canAccessPath(user.perfil, pathname)) {
-      navigate(fallback, { replace: true });
-    }
-  }, [loading, isAuthenticated, user, publicPath, pathname, navigate]);
 
   if (loading) {
     return (
@@ -70,33 +46,33 @@ export function AppShell({ children }: AppShellProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     if (publicPath) return <>{children}</>;
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
-  if (!user) return null;
+  const fallback = getDefaultRouteForRole(user.perfil);
 
-  if (publicPath || !hasAccess) {
-    return null;
+  if (publicPath) {
+    return <Navigate to={fallback} replace />;
+  }
+
+  if (!canAccessPath(user.perfil, pathname)) {
+    return <Navigate to={fallback} replace />;
   }
 
   return (
-    <Box minH="100vh" px={{ base: 4, md: 6 }} py={{ base: 4, md: 6 }}>
-      <Flex mx="auto" maxW="1120px" minH="calc(100vh - 2rem)" gap={{ base: 4, md: 6 }}>
-        <Box display={{ base: "none", md: "block" }} w="320px" flexShrink={0}>
+    <Box minH="100vh" w="100%" overflowX="hidden">
+      <Flex w="100%" minH="100vh" gap={{ base: 0, md: 4 }} direction={{ base: "column", md: "row" }} align="stretch">
+        <Box display={{ base: "none", md: "block" }} w="320px" flexShrink={0} p={4} pr={0}>
           <Sidebar />
         </Box>
 
         <Box
           flex="1"
-          borderRadius="2xl"
-          borderWidth="1px"
-          borderColor="gray.200"
-          bg="rgba(255, 255, 255, 0.75)"
-          p={{ base: 4, md: 6 }}
-          boxShadow="0 10px 30px rgba(22, 50, 34, 0.08)"
-          backdropFilter="blur(6px)"
+          minW="0"
+          bg="transparent"
+          p={{ base: 3, md: 6 }}
         >
           <Flex mb={4} align="center" justify="space-between" display={{ base: "flex", md: "none" }}>
             <Button
@@ -115,7 +91,9 @@ export function AppShell({ children }: AppShellProps) {
             </Text>
           </Flex>
 
-          <Box minH="70vh">{children}</Box>
+          <Box minH="70vh" minW={0}>
+            {children}
+          </Box>
         </Box>
       </Flex>
 

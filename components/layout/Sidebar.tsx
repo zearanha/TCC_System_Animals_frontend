@@ -63,6 +63,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       h="100%"
       w="100%"
       direction="column"
+      minH={{ base: "calc(100vh - 2rem)", md: "100%" }}
       borderRadius="2xl"
       borderWidth="1px"
       borderColor="brand.200"
@@ -80,7 +81,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </Text>
       </Box>
 
-      <VStack as="nav" spacing={1.5} align="stretch">
+      <VStack as="nav" spacing={1.5} align="stretch" flex="1" minH={0} overflowY="auto" pr={1}>
         {visibleItems.map((item) => {
           const active = pathname === item.href;
           return (
@@ -113,7 +114,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               >
                 {item.badge}
               </Flex>
-              {item.label}
+              <Box as="span" flex="1" minW={0} lineHeight="1.25">
+                {item.label}
+              </Box>
             </Flex>
           );
         })}
@@ -124,7 +127,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <Text fontSize="sm" fontWeight="semibold" color="brand.50">
             {user.nome}
           </Text>
-          <Text fontSize="xs" color="brand.200">
+          <Text fontSize="xs" color="brand.200" wordBreak="break-word">
             {user.email}
           </Text>
           <Text mt={1} fontSize="11px" textTransform="uppercase" letterSpacing="wide" color="brand.300">

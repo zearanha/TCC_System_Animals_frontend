@@ -164,6 +164,8 @@ body {
 .shadow { box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12); }
 .overflow-hidden { overflow: hidden; }
 .overflow-x-auto { overflow-x: auto; }
+.overflow-y-auto { overflow-y: auto; }
+.max-h-\[90vh\] { max-height: 90vh; }
 .transition-colors { transition: background-color 0.2s ease, color 0.2s ease; }
 .backdrop-blur-sm { backdrop-filter: blur(4px); }
 

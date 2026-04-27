@@ -1,4 +1,5 @@
 import Alert from "@mui/material/Alert";
+import { MuiScopedProvider } from "@/components/providers/MuiScopedProvider";
 
 type StatusType = "error" | "success" | "info";
 
@@ -15,16 +16,18 @@ const severityByType: Record<StatusType, "error" | "success" | "info"> = {
 
 export function StatusAlert({ type, message }: StatusAlertProps) {
   return (
-    <Alert
-      severity={severityByType[type]}
-      variant="outlined"
-      sx={{
-        borderRadius: 3,
-        fontSize: "0.9rem",
-        fontWeight: 600
-      }}
-    >
-      {message}
-    </Alert>
+    <MuiScopedProvider>
+      <Alert
+        severity={severityByType[type]}
+        variant="outlined"
+        sx={{
+          borderRadius: 3,
+          fontSize: "0.9rem",
+          fontWeight: 600
+        }}
+      >
+        {message}
+      </Alert>
+    </MuiScopedProvider>
   );
 }

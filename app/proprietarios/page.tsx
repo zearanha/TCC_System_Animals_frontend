@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { FormField } from "@/components/forms";
 import { Button, ConfirmationModal, DataTable, Input, PageHeader, StatusAlert } from "@/components/ui";
 import { formatCpf } from "@/lib/formatters";
+import { resolveApiAssetUrl } from "@/lib/media";
 import { isValidCpf, isValidEmail } from "@/lib/validators";
 import {
   createProprietario,
@@ -46,11 +47,13 @@ export default function ListaProprietariosPage() {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createForm, setCreateForm] = useState<OwnerFormState>(initialForm);
+  const [createFoto, setCreateFoto] = useState<File | null>(null);
   const [createErrors, setCreateErrors] = useState<OwnerFormErrors>({});
   const [savingCreate, setSavingCreate] = useState(false);
 
   const [savingEdit, setSavingEdit] = useState(false);
   const [editForm, setEditForm] = useState<EditFormState | null>(null);
+  const [editFoto, setEditFoto] = useState<File | null>(null);
   const [editErrors, setEditErrors] = useState<OwnerFormErrors>({});
 
   const formattedCreateCpf = useMemo(() => formatCpf(createForm.cpf), [createForm.cpf]);
@@ -58,6 +61,10 @@ export default function ListaProprietariosPage() {
     if (!editForm) return "";
     return formatCpf(editForm.cpf);
   }, [editForm]);
+  const proprietarioEmEdicao = useMemo(() => {
+    if (!editForm) return null;
+    return proprietarios.find((item) => item.id === editForm.id) ?? null;
+  }, [editForm, proprietarios]);
 
   useEffect(() => {
     void loadProprietarios();
@@ -99,12 +106,14 @@ export default function ListaProprietariosPage() {
     clearFeedback();
     setCreateErrors({});
     setCreateForm(initialForm);
+    setCreateFoto(null);
     setIsCreateModalOpen(true);
   }
 
   function closeCreateModal() {
     setIsCreateModalOpen(false);
     setCreateErrors({});
+    setCreateFoto(null);
   }
 
   function openEditModal(proprietario: Proprietario) {
@@ -118,11 +127,13 @@ export default function ListaProprietariosPage() {
       email: proprietario.email ?? "",
       endereco: proprietario.endereco ?? ""
     });
+    setEditFoto(null);
   }
 
   function closeEditModal() {
     setEditForm(null);
     setEditErrors({});
+    setEditFoto(null);
   }
 
   function updateCreateField<K extends keyof OwnerFormState>(key: K, value: OwnerFormState[K]) {
@@ -153,8 +164,17 @@ export default function ListaProprietariosPage() {
 
     setSavingCreate(true);
     try {
-      await createProprietario(payload);
-      setFeedbackSuccess("Proprietario cadastrado com sucesso.");
+      const created = await createProprietario(payload);
+
+      if (createFoto) {
+        await updateProprietario(created.id, {}, createFoto);
+      }
+
+      setFeedbackSuccess(
+        createFoto
+          ? "Proprietario e foto de perfil cadastrados com sucesso."
+          : "Proprietario cadastrado com sucesso."
+      );
       closeCreateModal();
       await loadProprietarios();
     } catch (err) {
@@ -205,8 +225,13 @@ export default function ListaProprietariosPage() {
 
     setSavingEdit(true);
     try {
-      await updateProprietario(editForm.id, payload);
-      setFeedbackSuccess("Proprietario atualizado com sucesso.");
+      await updateProprietario(editForm.id, payload, editFoto ?? undefined);
+
+      setFeedbackSuccess(
+        editFoto
+          ? "Proprietario e foto de perfil atualizados com sucesso."
+          : "Proprietario atualizado com sucesso."
+      );
       closeEditModal();
       await loadProprietarios();
     } catch (err) {
@@ -243,6 +268,28 @@ export default function ListaProprietariosPage() {
         loading={loadingList}
         emptyMessage="Nenhum proprietario cadastrado."
         columns={[
+          {
+            header: "Foto",
+            render: (proprietario) => {
+              const fotoUrl = resolveApiAssetUrl(proprietario.fotoPerfilUrl);
+
+              if (!fotoUrl) return "-";
+
+              return (
+                <img
+                  src={fotoUrl}
+                  alt={`Foto de ${proprietario.nome}`}
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "9999px",
+                    objectFit: "cover"
+                  }}
+                  loading="lazy"
+                />
+              );
+            }
+          },
           { header: "Nome", render: (proprietario) => proprietario.nome },
           { header: "CPF", render: (proprietario) => formatCpf(proprietario.cpf) },
           { header: "Telefone", render: (proprietario) => proprietario.telefone ?? "-" },
@@ -275,12 +322,12 @@ export default function ListaProprietariosPage() {
       />
 
       {isCreateModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 overflow-y-auto">
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Cadastrar proprietario"
-            className="w-full max-w-2xl rounded-2xl border border-[var(--border)] bg-white p-5 shadow-card"
+            className="w-full max-w-2xl rounded-2xl border border-[var(--border)] bg-white p-5 shadow-card max-h-[90vh] overflow-y-auto"
           >
             <div className="mb-4">
               <h2 className="font-[var(--font-heading)] text-xl font-semibold text-brand-900">
@@ -336,7 +383,17 @@ export default function ListaProprietariosPage() {
                 />
               </FormField>
 
-              <div className="md:col-span-2 mt-2 flex justify-end gap-2">
+              <div className="md:col-span-2">
+                <FormField label="Foto de perfil (opcional)">
+                  <Input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(event) => setCreateFoto(event.target.files?.[0] ?? null)}
+                  />
+                </FormField>
+              </div>
+
+              <div className="md:col-span-2 mt-2 flex flex-wrap justify-end gap-2">
                 <Button type="button" variant="ghost" onClick={closeCreateModal} disabled={savingCreate}>
                   Cancelar
                 </Button>
@@ -350,12 +407,12 @@ export default function ListaProprietariosPage() {
       ) : null}
 
       {editForm ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 overflow-y-auto">
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Editar proprietario"
-            className="w-full max-w-2xl rounded-2xl border border-[var(--border)] bg-white p-5 shadow-card"
+            className="w-full max-w-2xl rounded-2xl border border-[var(--border)] bg-white p-5 shadow-card max-h-[90vh] overflow-y-auto"
           >
             <div className="mb-4">
               <h2 className="font-[var(--font-heading)] text-xl font-semibold text-brand-900">
@@ -411,7 +468,31 @@ export default function ListaProprietariosPage() {
                 />
               </FormField>
 
-              <div className="md:col-span-2 mt-2 flex justify-end gap-2">
+              <div className="md:col-span-2">
+                <FormField label="Foto de perfil (opcional)">
+                  {proprietarioEmEdicao?.fotoPerfilUrl ? (
+                    <div style={{ marginBottom: "8px" }}>
+                      <img
+                        src={resolveApiAssetUrl(proprietarioEmEdicao.fotoPerfilUrl) ?? ""}
+                        alt={`Foto atual de ${proprietarioEmEdicao.nome}`}
+                        style={{
+                          width: "72px",
+                          height: "72px",
+                          borderRadius: "9999px",
+                          objectFit: "cover"
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                  <Input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(event) => setEditFoto(event.target.files?.[0] ?? null)}
+                  />
+                </FormField>
+              </div>
+
+              <div className="md:col-span-2 mt-2 flex flex-wrap justify-end gap-2">
                 <Button type="button" variant="ghost" onClick={closeEditModal} disabled={savingEdit}>
                   Cancelar
                 </Button>

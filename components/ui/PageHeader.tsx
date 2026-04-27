@@ -8,7 +8,14 @@ interface PageHeaderProps {
 export function PageHeader({ title, description }: PageHeaderProps) {
   return (
     <VStack align="start" spacing={1}>
-      <Text as="h1" fontFamily="heading" fontSize={{ base: "2xl", md: "3xl" }} fontWeight="semibold" color="brand.900">
+      <Text
+        as="h1"
+        fontFamily="heading"
+        fontSize={{ base: "xl", sm: "2xl", md: "3xl" }}
+        lineHeight="short"
+        fontWeight="semibold"
+        color="brand.900"
+      >
         {title}
       </Text>
       <Text fontSize={{ base: "sm", md: "md" }} color="gray.600">

@@ -3,10 +3,19 @@ import { Proprietario } from "./proprietario";
 export type PorteAnimal = "PEQUENO" | "MEDIO" | "GRANDE";
 export type SexoAnimal = "MACHO" | "FEMEA";
 
+export interface IdentificacaoImagem {
+  id: string;
+  identificacaoId: string;
+  imagemUrl: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Identificacao {
   id: string;
   codigo: string;
   animalId: string;
+  imagens?: IdentificacaoImagem[];
   createdAt?: string;
 }
 
